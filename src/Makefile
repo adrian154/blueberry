@@ -10,11 +10,18 @@
 #          kernel.
 #    - Create loopback devices for the partitions.
 #    - Write the bootloader to the boot partition.
-#    - Create a filesystem for the OS partition and write the kernel.
+#    - Create a filesystem for the OS partition, mount it, and write the kernel.
 #
-# 
+# See README.md for information about how to build on your system and a list of
+# dependencies. 
 
 # Directories
 SRCDIR   := ./src
 BUILDDIR := ./build
 OUTDIR   := ./out
+
+# dd if=/dev/zero of=disk.img bs=1048576 count=1
+# parted disk.img --script mklabel gpt mkpart primary 0 1M
+# losetup -Pf --show <file>
+# losetup -D <file>
+# mkfs.exfat -n volumename DEVICEHERE
