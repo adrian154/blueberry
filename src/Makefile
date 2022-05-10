@@ -20,8 +20,8 @@ SRCDIR   := ./src
 BUILDDIR := ./build
 OUTDIR   := ./out
 
-# dd if=/dev/zero of=disk.img bs=1048576 count=1
-# parted disk.img --script mklabel gpt mkpart primary 0 1M
+# dd if=/dev/zero of=disk.img bs=1048576 count=16
+# parted disk.img --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
 # losetup -Pf --show <file>
 # losetup -D <file>
 # mkfs.exfat -n volumename DEVICEHERE
