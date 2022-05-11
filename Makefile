@@ -17,8 +17,14 @@ MOUNTDIR := ./mount
 BOOTSECTOR := $(BUILDDIR)/bootsector.bin
 DISK_IMAGE := $(OUTDIR)/disk.img
 
+# We always use /dev/loop7 for the sake of simplicity, change this if it con-
+# flicts with existing loopback devices on your system.
+LOOPBACK          := /dev/loop7
+BOOT_PART_LOOPDEV := $(LOOPBACK)p1
+OS_PART_LOOPDEV   := $(LOOPBACK)p2 
+
 # Declare a few phony targets
-.PHONY: image
+.PHONY: image clean clean-disk-image
 
 # ==============================================================================
 # The Disk Image
@@ -31,32 +37,42 @@ DISK_IMAGE := $(OUTDIR)/disk.img
 #    - Write the bootloader to the boot partition
 #    - Initialize a filesystem (exFAT) for the OS partition
 #    - Mount the filesystem and write the kernel
-#    - 
+#    - Unmount, clean up loopback devices
 #
+# Annoyingly enough, this process must be run as the superuser because `mount`
+# demands it.
 
-image: $(BOOTSECTOR) mount
-
-# Create a blank disk image and set up the partitions
-$(DISK_IMAGE): 
-	dd if=/dev/zero of=disk.img bs=1048576 count=16
-	parted disk.img --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
-
-# Set up loopback devices and mount disk image
-mount: $(DISK_IMAGE)
-	LOOPBACK_NAME := $(losetup -Pf --show $(DISK_IMAGE))
-
-# Unmount disk image and tear down loopback devices
-mount_cleanup:
+# Assemble the final disk image. The bootsector is copied in two parts to avoid
+# overwriting the MBR--even though we're using GPT, there's still an MBR to re-
+# main compatible with older machines.
+image: $(DISK_IMAGE) $(BOOTSECTOR)
+	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=446 count=1
+	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=2 count=1 skip=510 seek=510
 	umount $(MOUNTDIR)
 	losetup -D $(DISK_IMAGE)
 
+# Create a blank disk image, set up the partitions, and create loopback devices
+$(DISK_IMAGE): clean-disk-images
+	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
+	parted $(DISK_IMAGE) --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
+	losetup -P --show $(LOOPBACK) $(DISK_IMAGE)
+	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
+	mount $(OS_PART_LOOPDEV) $(MOUNTDIR)
+
+# Clean only the disk images
+clean-disk-images:
+	mkdir -p $(OUTDIR)
+	rm -rf $(OUTDIR)/*
+
 # Remove all build files; also creates directories if they don't exist yet
 clean:
-	mkdir -p $(SRCDIR) $(BUILDDIR) $(OUTDIR) $(MOUNTDIR)
-	rm -rf $(SRCDIR)/* $(BUILDDIR)/* $(OUTDIR)/* $(MOUNTDIR)/*
+	mkdir -p $(BUILDDIR) $(OUTDIR) $(MOUNTDIR)
+	rm -rf $(BUILDDIR)/* $(OUTDIR)/* $(MOUNTDIR)/*
 
-# dd if=/dev/zero of=disk.img bs=1048576 count=16
-# parted disk.img --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
-# losetup -Pf --show <file>
-# losetup -D <file>
-# mkfs.exfat -n volumename DEVICEHERE
+# ==============================================================================
+# The Bootsector
+# ==============================================================================
+# The bootsector is very easy to assemble, since it has no dependencies.
+
+$(BOOTSECTOR):
+	nasm src/boot/bootsector.asm -f bin -o $(BUILDDIR)/bootsector.bin

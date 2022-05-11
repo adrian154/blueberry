@@ -42,6 +42,7 @@ start:
     ; Switch to VGA text mode, in case our current graphics mode is something
     ; else.
     call set_textmode
+    mov eax, 0xdeadbeef
 
 ; If something goes wrong, hang the system.
 hang:
