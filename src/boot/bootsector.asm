@@ -43,10 +43,6 @@ start:
     ; else.
     call set_textmode
 
-    ; Load the bootloader into memory and jump to it.
-    ;call load_bootloader
-
-
 ; If something goes wrong, hang the system.
 hang:
     cli
@@ -59,8 +55,7 @@ set_textmode:
     int 0x10
     ret
 
-
-; TODO: MBR
+; Pad out to 512 bytes
 TIMES 510-($-$$) db 0
 
 ; Some BIOSes compare the last two bytes of the bootsector to 55 AA when de-
