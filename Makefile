@@ -55,7 +55,7 @@ image: $(DISK_IMAGE) $(BOOTSECTOR)
 $(DISK_IMAGE): clean-disk-images
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
 	parted $(DISK_IMAGE) --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
-	losetup -P --show $(LOOPBACK) $(DISK_IMAGE)
+	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mount $(OS_PART_LOOPDEV) $(MOUNTDIR)
 
