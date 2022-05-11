@@ -47,7 +47,7 @@ OS_PART_LOOPDEV   := $(LOOPBACK)p2
 # main compatible with older machines.
 image: $(DISK_IMAGE) $(BOOTSECTOR)
 	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=446 count=1
-	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=2 count=1 skip=510 seek=510
+	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=1 count=2 skip=510 seek=510
 	umount $(MOUNTDIR)
 	losetup -D $(DISK_IMAGE)
 
