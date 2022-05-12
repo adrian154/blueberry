@@ -8,6 +8,8 @@
 # Is this Makefile horrendously overcomplicated? Maybe. I think part of it is 
 # just because `make` syntax stinks.
 
+CC := /home/oreo/opt/cross/bin/i686-elf-gcc
+
 BUILDDIR := ./build
 OUTDIR   := ./out
 MOUNTDIR := ./mount
@@ -81,17 +83,24 @@ clean: cleanup-disk
 # ==============================================================================
 # The bootsector is very easy to assemble, since it has no dependencies.
 
-$(BOOTSECTOR): $(BUILDDIR) src/boot/bootsector.asm
-	nasm src/boot/bootsector.asm -f bin -o $(BUILDDIR)/bootsector.bin
+$(BOOTSECTOR): src/boot/bootsector.asm $(BUILDDIR)
+	nasm $< -f bin -o $(BUILDDIR)/bootsector.bin -I ./src/boot
 
 # ==============================================================================
 # The Bootloader
 # ==============================================================================
-# Coming soon...
+# The bootloader's files are assembled independently and then linked.
 
-$(BOOTLOADER): $(BUILDDIR) src/boot/bootloader.asm
-	nasm src/boot/bootloader.asm -f bin -o $(BUILDDIR)/bootloader.bin
+BOOTLOADER_OBJECTS := bootloader.o
+BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
+
+# Link the bootloader objects
+$(BOOTLOADER): $(BOOTLOADER_OBJ_FILES) $(BUILDDIR)
+	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $<
+
+$(BUILDDIR)/boot/%.o: src/boot/%.asm
+	nasm $< -f elf -o $@ -I ./src/boot/
 
 # Recipe which creates the build directory. 
 $(BUILDDIR):
-	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR)/boot $(BUILDDIR)/kernel

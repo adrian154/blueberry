@@ -13,9 +13,7 @@
 BITS 16
 ORG 0x7c00
 
-GPT_HEADER_LOAD_ADDR  equ 0x7e00
-GPT_ENTRIES_LOAD_ADDR equ 0x8000
-BOOTLOADER_LOAD_ADDR  equ 0xc000
+%include "addresses.asm"
 
 ; We know that the bootsector is located at 0x7c00 in physical memory, but there
 ; are several possibilities for the actual value of CS:IP. We can make sure that
@@ -221,7 +219,9 @@ load_bootloader:
     mov si, err_disk_read_fail
     jc fail
 
-    ; Jump to the bootloader!! Woohoo!!
+    ; Pass the bootloader the location of drive_number via the stack, and then
+    ; jump to the bootloader!
+    push drive_number
     jmp BOOTLOADER_LOAD_ADDR
 
 .next:
