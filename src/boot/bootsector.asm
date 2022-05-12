@@ -38,9 +38,8 @@ start:
     mov ss, ax
     mov sp, 0x7bff
 
-    ; Push the disk number onto the stack so that the bootloader can pass it to
-    ; the kernel later.
-    push dx
+    ; Save the disk number for use later.
+    mov BYTE [drive_number], dl
 
     ; Switch to VGA text mode, in case our current graphics mode is something
     ; else.
@@ -151,6 +150,9 @@ init_serial:
 ; don't want to work with CHS addressing.
 load_bootloader:
 
+    ; Set DL again.
+    mov dl, [drive_number]
+
     ; Read the GPT into memory
     mov ah, 0x42    ; INT 0x10 AH=0x42: extended read
     mov si, .DAP    ; arguments are passed through a "disk access packet"
@@ -199,7 +201,14 @@ load_bootloader:
     dw 0x0000
 .DAP_start_sector:
     dd 1
-    dw 0 ; upper 16 bits of LBA start addr, we keep this zero 
+    dd 0 ; upper 32 bits of LBA start addr, we keep this zero 
+         ; this field might actually be 16 bits--I've read some conflicting
+         ; documentation--but that's the beauty of little-endian numbers:
+         ; it doesn't really matter, in our case.
+
+; Store the drive number in a known location that can be passed to the boot-
+; loader later on.
+drive_number db 0
 
 ; A couple of null-terminated error messages, for debugging's sake.
 err_disk_read_fail db "disk I/O failure",0
