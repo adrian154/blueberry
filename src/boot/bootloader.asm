@@ -20,10 +20,15 @@ SECTION .text
 
 %include "addresses.asm"
 
+GLOBAL start
+EXTERN envdata_drive_number
+
 start:
 
     ; Save the drive number
-    pop WORD [drive_number_ptr]
+    pop si
+    mov dl, [si]
+    mov [envdata_drive_number], dl
 
     ; Print a welcome message ;)
     mov si, str_welcome
@@ -55,7 +60,7 @@ print:
     mov dx, 0x3f8
     out dx, al
     jmp .loop
-.done
+.done:
     ret
 
 ; The pointer to the drive number as passed by the bootsector

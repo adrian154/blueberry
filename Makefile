@@ -91,12 +91,12 @@ $(BOOTSECTOR): src/boot/bootsector.asm $(BUILDDIR)
 # ==============================================================================
 # The bootloader's files are assembled independently and then linked.
 
-BOOTLOADER_OBJECTS := bootloader.o
+BOOTLOADER_OBJECTS := bootloader.o envdata.o
 BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
 
 # Link the bootloader objects
-$(BOOTLOADER): $(BOOTLOADER_OBJ_FILES) $(BUILDDIR)
-	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $<
+$(BOOTLOADER): $(BOOTLOADER_OBJ_FILES) | $(BUILDDIR)
+	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $^
 
 $(BUILDDIR)/boot/%.o: src/boot/%.asm
 	nasm $< -f elf -o $@ -I ./src/boot/
