@@ -3,3 +3,28 @@
 Blueberry is yet another attempt at creating a functioning operating system.
 
 This time, I have adopted the approach of writing highly commented code in an almost narrative style. In my opinion, this improves the understandability of large projects vastly and is severely underrated.
+
+# Building
+
+Blueberry is built using GNU Make. It probably will not work outside of a Linux environment. I know for a fact that it works on WSL since that is the primary environment I develop in.
+
+You will need a couple dependencies, excluding tools found in util-linux:
+* exfat-utils
+* nasm
+
+Here's a description of all the make targets.
+* `image`: build a flat disk image
+* `clean`: nuke all build files
+* `cleanup-disk`: clean up loopback devices and mounts
+
+You will eventually need a cross compiler, but Blueberry is insanely young and incomplete right now. Expect these directions to change in the coming weeks.
+
+# Running
+
+The system can be booted in QEMU with
+
+```
+qemu-system-i386 -drive file=disk.img,format=raw
+```
+
+I have not tested the OS on real hardware yet, since I don't really have anything that still supports legacy BIOS boot.

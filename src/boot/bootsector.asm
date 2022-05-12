@@ -171,9 +171,11 @@ load_bootloader:
     cmp eax, 0x54524150
     jne fail
 
-    ; Load the partition table
+    ; Load the partition table. While it probably only spans 1 or 2 sectors,
+    ; it's easier to just read the maximum possible size of the table (32s)
     mov WORD [.DAP_addr], GPT_ENTRIES_LOAD_ADDR
     mov DWORD [.DAP_start_sector], 2
+    mov WORD [.DAP_sectors], 32
     mov ah, 0x42 ; each call trashes AH
     mov si, .DAP
     int 0x13 
@@ -184,12 +186,36 @@ load_bootloader:
     ; Loop over entries in the partition table and try to identify the "boot
     ; partition"
     mov ecx, DWORD [GPT_ENTRIES_LOAD_ADDR + 0x50]
+    mov edx, GPT_ENTRIES_LOAD_ADDR
 .loop:
 
-    ; Test loop condition and loop
+    ; Check if the partition type GUID matches the BIOS Boot Partition type.
+    mov eax, 0
+.check_part_type_loop:
+    mov ebx, [edx + eax * 4]
+    cmp [loader_partition_type + eax * 4], ebx
+    jne .next
+
+    ; loop condition
+    inc eax
+    cmp eax, 4
+    jl .check_part_type_loop
+
+    ; if execution has reached here, the type matches!!
+    mov eax, 0xdeadbeef
+    jmp hang
+
+.next:
+
+    ; loop exit condition
     dec ecx
     test ecx, ecx
     jz fail
+  
+    ; A field in the GPT header tells us the size of each partition entry.
+    ; This value is unlikely to not be 128, but just in case.
+    add edx, [GPT_HEADER_LOAD_ADDR + 0x54]
+    jmp .loop
 
 .DAP:
     db 0x10 ; size of struct = 16
@@ -208,13 +234,16 @@ load_bootloader:
          ; it doesn't really matter, in our case.
 
 ; Store the drive number in a known location that can be passed to the boot-
-; loader later on.
+; loader later on
 drive_number db 0
 
-; A couple of null-terminated error messages, for debugging's sake.
+; A couple of null-terminated error messages, for debugging's sake
 err_disk_read_fail db "disk I/O failure",0
 err_bad_gpt_header db "invalid GPT header",0
-teststr db "hello world",0
+
+; The BIOS boot partition type
+; I'm serious. This is the actual value of the GUID.
+loader_partition_type db "Hah!IdontNeedEFI"
 
 ; Pad out to 512 bytes
 TIMES 510-($-$$) db 0

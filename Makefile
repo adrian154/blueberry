@@ -6,7 +6,7 @@
 # dependencies. 
 #
 # Is this Makefile horrendously overcomplicated? Maybe. I think part of it is 
-# just because `make` syntax is frankly kind of abhorrent.
+# just because `make` syntax stinks.
 
 BUILDDIR := ./build
 OUTDIR   := ./out
@@ -23,7 +23,7 @@ BOOT_PART_LOOPDEV := $(LOOPBACK)p1
 OS_PART_LOOPDEV   := $(LOOPBACK)p2 
 
 # Declare a few phony targets
-.PHONY: image clean clean-disk-image
+.PHONY: image clean cleanup-disk
 
 # ==============================================================================
 # The Disk Image
@@ -42,8 +42,8 @@ OS_PART_LOOPDEV   := $(LOOPBACK)p2
 # demands it.
 
 # Assemble the final disk image. The bootsector is copied in two parts to avoid
-# overwriting the MBR--even though we're using GPT, there's still an MBR to re-
-# main compatible with older machines.
+# overwriting the MBR--even though we're using GPT, there's still an MBR to
+# avoid confusing old machines.
 image: $(DISK_IMAGE) $(BOOTSECTOR)
 	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=446 count=1
 	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=1 count=2 skip=510 seek=510
@@ -51,9 +51,11 @@ image: $(DISK_IMAGE) $(BOOTSECTOR)
 	losetup -D $(DISK_IMAGE)
 
 # Create a blank disk image, set up the partitions, and create loopback devices
+# parted's "bios_grub" flag will set the partition type to the generally recog-
+# nized value for BIOS boot partitions.
 $(DISK_IMAGE): cleanup-disk
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
-	parted $(DISK_IMAGE) --script mklabel gpt mkpart "BOOT" 34s 40s mkpart "Blueberry" 41s 100%
+	parted $(DISK_IMAGE) --script mklabel gpt mkpart "boot" 34s 40s mkpart "Blueberry" 41s 100% set 2 bios_grub on
 	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mkdir -p $(MOUNTDIR)
