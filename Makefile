@@ -53,7 +53,7 @@ image: $(DISK_IMAGE) $(BOOTSECTOR)
 # Create a blank disk image, set up the partitions, and create loopback devices
 $(DISK_IMAGE): cleanup-disk
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
-	parted $(DISK_IMAGE) --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
+	parted $(DISK_IMAGE) --script mklabel gpt mkpart "BOOT" 34s 40s mkpart "Blueberry" 41s 100%
 	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mkdir -p $(MOUNTDIR)
