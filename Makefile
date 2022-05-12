@@ -14,6 +14,7 @@ MOUNTDIR := ./mount
 
 # Important files which will be consumed/produced during the build
 BOOTSECTOR := $(BUILDDIR)/bootsector.bin
+BOOTLOADER := $(BUILDDIR)/bootloader.bin
 DISK_IMAGE := $(OUTDIR)/disk.img
 
 # We always use /dev/loop7 for the sake of simplicity, change this if it con-
@@ -44,9 +45,10 @@ OS_PART_LOOPDEV   := $(LOOPBACK)p2
 # Assemble the final disk image. The bootsector is copied in two parts to avoid
 # overwriting the MBR--even though we're using GPT, there's still an MBR to
 # avoid confusing old machines.
-image: $(DISK_IMAGE) $(BOOTSECTOR)
+image: $(DISK_IMAGE) $(BOOTSECTOR) $(BOOTLOADER)
 	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=446 count=1
 	dd if=$(BOOTSECTOR) of=$(DISK_IMAGE) conv=notrunc bs=1 count=2 skip=510 seek=510
+	dd if=$(BOOTLOADER) of=$(BOOT_PART_LOOPDEV) 
 	umount $(MOUNTDIR)
 	losetup -D $(DISK_IMAGE)
 
@@ -55,7 +57,7 @@ image: $(DISK_IMAGE) $(BOOTSECTOR)
 # nized value for BIOS boot partitions.
 $(DISK_IMAGE): cleanup-disk
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
-	parted $(DISK_IMAGE) --script mklabel gpt mkpart "boot" 34s 40s mkpart "Blueberry" 41s 100% set 2 bios_grub on
+	parted $(DISK_IMAGE) --script mklabel gpt mkpart "boot" 34s 40s mkpart "Blueberry" 41s 100% set 1 bios_grub on
 	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mkdir -p $(MOUNTDIR)
@@ -81,6 +83,14 @@ clean: cleanup-disk
 
 $(BOOTSECTOR): $(BUILDDIR) src/boot/bootsector.asm
 	nasm src/boot/bootsector.asm -f bin -o $(BUILDDIR)/bootsector.bin
+
+# ==============================================================================
+# The Bootloader
+# ==============================================================================
+# Coming soon...
+
+$(BOOTLOADER): $(BUILDDIR) src/boot/bootloader.asm
+	nasm src/boot/bootloader.asm -f bin -o $(BUILDDIR)/bootloader.bin
 
 # Recipe which creates the build directory. 
 $(BUILDDIR):

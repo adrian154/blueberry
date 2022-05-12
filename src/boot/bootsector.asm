@@ -15,6 +15,7 @@ ORG 0x7c00
 
 GPT_HEADER_LOAD_ADDR  equ 0x7e00
 GPT_ENTRIES_LOAD_ADDR equ 0x8000
+BOOTLOADER_LOAD_ADDR  equ 0xc000
 
 ; We know that the bootsector is located at 0x7c00 in physical memory, but there
 ; are several possibilities for the actual value of CS:IP. We can make sure that
@@ -201,9 +202,27 @@ load_bootloader:
     cmp eax, 4
     jl .check_part_type_loop
 
-    ; if execution has reached here, the type matches!!
-    mov eax, 0xdeadbeef
-    jmp hang
+    ; If execution has reached here, we've found a matching partition!
+    ; Now all that's left for us to do is read the start/end addresses, load
+    ; the bootloader into memory, and jump to it.
+    ; LIMITATION: 48-bit LBA truncated here in horrible ways!
+    mov eax, [edx + 0x28]
+    mov ebx, [edx + 0x20]
+    sub eax, ebx
+    mov WORD [.DAP_sectors], ax
+    mov WORD [.DAP_start_sector], bx
+    mov WORD [.DAP_addr], BOOTLOADER_LOAD_ADDR
+    
+    ; Set up for BIOS call to load bootloader into memory
+    mov ah, 0x42
+    mov si, .DAP
+    mov dl, [drive_number]
+    int 0x13
+    mov si, err_disk_read_fail
+    jc fail
+
+    ; Jump to the bootloader!! Woohoo!!
+    jmp BOOTLOADER_LOAD_ADDR
 
 .next:
 
