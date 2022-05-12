@@ -8,7 +8,6 @@
 # Is this Makefile horrendously overcomplicated? Maybe. I think part of it is 
 # just because `make` syntax is frankly kind of abhorrent.
 
-SRCDIR   := ./src
 BUILDDIR := ./build
 OUTDIR   := ./out
 MOUNTDIR := ./mount
@@ -52,27 +51,35 @@ image: $(DISK_IMAGE) $(BOOTSECTOR)
 	losetup -D $(DISK_IMAGE)
 
 # Create a blank disk image, set up the partitions, and create loopback devices
-$(DISK_IMAGE): clean-disk-images
+$(DISK_IMAGE): cleanup-disk
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
 	parted $(DISK_IMAGE) --script mklabel gpt mkpart extended 34s 40s mkpart primary 41s 100%
 	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
+	mkdir -p $(MOUNTDIR)
 	mount $(OS_PART_LOOPDEV) $(MOUNTDIR)
 
-# Clean only the disk images
-clean-disk-images:
+# Remove old disk images and loopback devices; tear down any mount points that
+# haven't been released yet.
+cleanup-disk:
+	-umount $(MOUNTDIR)
+	losetup -D $(DISK_IMAGE)
 	mkdir -p $(OUTDIR)
 	rm -rf $(OUTDIR)/*
 
 # Remove all build files; also creates directories if they don't exist yet
-clean:
-	mkdir -p $(BUILDDIR) $(OUTDIR) $(MOUNTDIR)
-	rm -rf $(BUILDDIR)/* $(OUTDIR)/* $(MOUNTDIR)/*
+clean: cleanup-disk
+	mkdir -p $(BUILDDIR)
+	rm -rf $(BUILDDIR)/*
 
 # ==============================================================================
 # The Bootsector
 # ==============================================================================
 # The bootsector is very easy to assemble, since it has no dependencies.
 
-$(BOOTSECTOR):
+$(BOOTSECTOR): $(BUILDDIR) src/boot/bootsector.asm
 	nasm src/boot/bootsector.asm -f bin -o $(BUILDDIR)/bootsector.bin
+
+# Recipe which creates the build directory. 
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
