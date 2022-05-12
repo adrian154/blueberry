@@ -167,7 +167,7 @@ load_bootloader:
     mov eax, [GPT_HEADER_LOAD_ADDR]
     cmp eax, 0x20494645
     jne fail
-    mov eax, [GPT_ENTRIES_LOAD_ADDR + 4]
+    mov eax, [GPT_HEADER_LOAD_ADDR + 4]
     cmp eax, 0x54524150
     jne fail
 
@@ -175,6 +175,7 @@ load_bootloader:
     mov WORD [.DAP_addr], GPT_ENTRIES_LOAD_ADDR
     mov DWORD [.DAP_start_sector], 2
     mov ah, 0x42 ; each call trashes AH
+    mov si, .DAP
     int 0x13 
     mov si, err_disk_read_fail
     jc fail
