@@ -68,7 +68,7 @@ fail:
     mov bl, al
     mov dx, 0x3fd
     in al, dx
-    test bl, 0x20
+    test al, 0x20
     jz .wait_serial_loop
 
     ; write to serial and loop
@@ -116,6 +116,7 @@ init_serial:
     mov dx, 0x3f8
     mov al, 12
     out dx, al
+
     mov dx, 0x3f9
     mov al, 0
     out dx, al
