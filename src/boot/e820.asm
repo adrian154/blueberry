@@ -48,6 +48,15 @@ get_mmap_e820:
     cmp eax, E820_MAGIC
     jne .failed 
 
+    ; Check ECX, which contains the number of bytes written. Some BIOSes don't
+    ; support the ACPI field in memory map entries, whose LSB indicates whether
+    ; the entry should be ignored. We obviously don't want to leave this as
+    ; zero since it will result in the kernel ignoring important entries, so if
+    ; <24 bytes were written manually set this to 1.
+    cmp ecx, 24
+    jl .set_acpi_field
+.acpi_continue:
+
     ; Increment # of entries and buffer pointer
     inc DWORD [envdata_mmap_num_entries]
     add di, MMAP_ENTRY_SIZE
@@ -72,6 +81,10 @@ get_mmap_e820:
 .failed:
     mov ax, 0
     ret
+
+.set_acpi_field:
+    mov DWORD [es:di + 20], 1
+    jmp .acpi_continue
 
 ; Save 1KiB for the memory map
 mmap_base times 1024 db 0

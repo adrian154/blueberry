@@ -96,6 +96,6 @@ print:
 drive_number_ptr dw 0
 
 ; Strings and error messages
-str_welcome db "hello from the blueberry bootloader!",0
-err_a20_not_enabled db "failed to enable the A20 line",0
-err_get_mmap_failed db "memory map could not be retrieved from BIOS",0
+str_welcome db `hello from the blueberry bootloader!\r\n`,0
+err_a20_not_enabled db `failed to enable the A20 line\r\n`,0
+err_get_mmap_failed db `memory map could not be retrieved from BIOS\r\n`,0
