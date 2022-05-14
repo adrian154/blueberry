@@ -83,7 +83,7 @@ clean: cleanup-disk
 # ==============================================================================
 # The bootsector is very easy to assemble, since it has no dependencies.
 
-$(BOOTSECTOR): src/boot/bootsector.asm $(BUILDDIR)
+$(BOOTSECTOR): src/boot/bootsector.asm | $(BUILDDIR)
 	nasm $< -f bin -o $(BUILDDIR)/bootsector.bin -I ./src/boot
 
 # ==============================================================================
@@ -100,7 +100,7 @@ BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
 
 # Link the bootloader objects
 $(BOOTLOADER): $(BOOTLOADER_OBJ_FILES) | $(BUILDDIR)
-	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $^
+	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $^ 
 
 $(BUILDDIR)/boot/%.o: src/boot/%.asm
 	nasm $< -f elf -o $@ -I ./src/boot/

@@ -24,6 +24,7 @@ SECTION .text
 
 GLOBAL start
 EXTERN envdata_drive_number
+EXTERN enable_a20
 
 start:
 
@@ -35,6 +36,17 @@ start:
     ; Print a welcome message ;)
     mov si, str_welcome
     call print
+
+    call enable_a20
+    test cx, cx
+    jnz .a20_fail
+
+    jmp hang
+
+.a20_fail:
+    mov si, err_a20_not_enabled
+    call print 
+    jmp hang
 
 hang:
     cli
@@ -69,4 +81,5 @@ print:
 drive_number_ptr dw 0
 
 ; Strings and error messages
-str_welcome db 'hello from the blueberry bootloader!\r\n',0
+str_welcome db `hello from the blueberry bootloader!\r\n`,0
+err_a20_not_enabled db `failed to enable the A20 line\r\n`,0

@@ -61,6 +61,10 @@ fail:
     jz hang
     int 0x10     ; print to screen
 
+    ; If there's no serial port, loop immediately
+    cmp BYTE [no_serial_port], 1
+    je .loop
+
 ; CPU is much faster than serial; spin until tx buffer is empty 
 .wait_serial_loop:
     mov bl, al
@@ -87,13 +91,8 @@ set_textmode:
     int 0x10
     ret
 
-; Set up COM1 at 9600 baud. Like set_textmode, this code doesn't really make an
-; attempt to verify whether the serial port is actually working. After all, what
-; are we going to do if the serial port is busted? Log a message... through the
-; serial port? Fat chance.
-;
-; As an aside, it would not have been possible for me to write this code without
-; the invaluable information about the 8250 UART controller on WikiBooks:
+; Set up COM1 at 9600 baud. 
+; For more information about serial port initialization, see
 ; https://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming 
 init_serial:
 
@@ -141,7 +140,32 @@ init_serial:
     mov al, 0xc7
     out dx, al
 
-    ; We won't bother with configuring interrupts *yet*.
+    ; Set the port to loopback mode to test if it actually exists and works.
+    ; The only reason we do this is because we don't want to wait on a non-
+    ; existent serial port when logging a message.
+    mov dx, 0x3fc
+    mov al, 0x13
+    out dx, al
+
+    ; Write something to the port and read it back; if it doesn't match, assume
+    ; that we cannot use the port.
+    mov dx, 0x3f8
+    mov al, 0x55
+    out dx, al
+
+    in al, dx
+    cmp al, 0x55
+    je .done
+
+    ; Mark the port as unusable.
+    mov BYTE [no_serial_port], 1
+    ret
+
+; If the port is good, disable loopback
+.done:
+    mov dx, 0x3fc
+    mov al, 0x3
+    out dx, al
     ret
 
 ; At this point, the most convenient way to load the kernel is to rely on BIOS
@@ -255,6 +279,9 @@ load_bootloader:
 ; Store the drive number in a known location that can be passed to the boot-
 ; loader later on
 drive_number db 0
+
+; Remember whether there's a working serial port
+no_serial_port db 0
 
 ; A couple of null-terminated error messages, for debugging's sake
 err_disk_read_fail db "disk I/O failure",0

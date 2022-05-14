@@ -29,7 +29,8 @@ SECTION .text
 GLOBAL enable_a20
 
 ; We try various methods of enabling the A20 gate, in order of likelihood of
-; success. 
+; success. CX is set to 0 if the A20 line is enabled and 1 if not (for use with
+; JCXZ).
 enable_a20:
 
     ; Very likely that A20 gate is on already.
@@ -52,10 +53,14 @@ enable_a20:
     ; don't support this method, so we use it as a last resort.
     call set_a20_fast 
     call check_a20
-    jcxz .done
 
 .done:
     ret
+
+set_a20_fast:
+    in al, 0x92
+    or al, 2
+    out 0x92, al
 
 bios_enable_a20:
     mov ax, 0x2401 ; INT 0x15 AX=0x2401: enable A20 gate
@@ -93,7 +98,7 @@ kbc_enable_a20:
     ; Send the new value.
     call .wait_write 
     pop ax 
-    mov 0x60, al
+    out 0x60, al
 
     ; Re-enable the PS/2 port we disabled earlier.
     call .wait_write 
