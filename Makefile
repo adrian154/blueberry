@@ -91,7 +91,11 @@ $(BOOTSECTOR): src/boot/bootsector.asm $(BUILDDIR)
 # ==============================================================================
 # The bootloader's files are assembled independently and then linked.
 
-BOOTLOADER_OBJECTS := bootloader.o envdata.o
+# The order of these objects is important, bootloader.o always needs to be first
+# so that our start symbol occurs at the very beginning of the binary. This
+# could be fixed through the linker script, but I don't think that's really
+# necessary.
+BOOTLOADER_OBJECTS := bootloader.o envdata.o a20.o
 BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
 
 # Link the bootloader objects

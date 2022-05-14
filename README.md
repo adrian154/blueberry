@@ -11,13 +11,14 @@ Blueberry is built using GNU Make. It probably will not work outside of a Linux 
 You will need a couple dependencies, excluding tools found in util-linux:
 * exfat-utils
 * nasm
+* a cross compiler targeting `i686-elf`
+
+You can either search for prebuilt cross-compiler binaries for your host architecture or follow [this guide](https://wiki.osdev.org/GCC_Cross-Compiler) to build your own. 
 
 Here's a description of all the make targets.
 * `image`: build a flat disk image
 * `clean`: nuke all build files
 * `cleanup-disk`: clean up loopback devices and mounts
-
-You will eventually need a cross compiler, but Blueberry is insanely young and incomplete right now. Expect these directions to change in the coming weeks.
 
 # Running
 

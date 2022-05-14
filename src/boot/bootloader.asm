@@ -3,11 +3,13 @@
 ; ==============================================================================
 ; The bootloader is the second piece of code run after the bootsector. It is re-
 ; sponsible for a number of tasks in preparation for the kernel:
-;    - enable the A20 line
-;    - obtain a memory map from the BIOS
-;    - parse the fs and load the kernel
-;    - set up a simple GDT
-;    - enter protected mode
+;
+;    - Enable the A20 line
+;    - Obtain a memory map from the BIOS
+;    - Parse the fs and load the kernel
+;    - Set up a simple GDT
+;    - Enter protected mode
+;
 ; As you can see, the bootloader requires much more sophistication than can be
 ; fit in 512 bytes, which is why we perform bootloading in two stages.
 ;
