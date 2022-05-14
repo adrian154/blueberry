@@ -20,11 +20,14 @@
 BITS 16
 SECTION .text
 
-%include "addresses.asm"
+%include "mem_locations.asm"
 
 GLOBAL start
 EXTERN envdata_drive_number
+EXTERN envdata_gpt_header_ptr
+EXTERN envdata_gpt_table_ptr
 EXTERN enable_a20
+EXTERN get_mmap_e820
 
 start:
 
@@ -33,13 +36,23 @@ start:
     mov dl, [si]
     mov [envdata_drive_number], dl
 
+    ; Initialize other envdata fields
+    mov DWORD [envdata_gpt_header_ptr], GPT_HEADER_LOAD_ADDR
+    mov DWORD [envdata_gpt_table_ptr], GPT_ENTRIES_LOAD_ADDR
+
     ; Print a welcome message ;)
     mov si, str_welcome
     call print
 
+    ; Enable the A20 gate, this is crucial to accessing all available memory.
     call enable_a20
     test cx, cx
     jnz .a20_fail
+
+    ; Retrieve a memory map for use by the kernel
+    call get_mmap_e820
+    test ax, ax
+    jz .e820_fail
 
     jmp hang
 
@@ -47,7 +60,9 @@ start:
     mov si, err_a20_not_enabled
     call print 
     jmp hang
-
+.e820_fail:
+    mov si, err_get_mmap_failed
+    call print 
 hang:
     cli
     hlt
@@ -81,5 +96,6 @@ print:
 drive_number_ptr dw 0
 
 ; Strings and error messages
-str_welcome db `hello from the blueberry bootloader!\r\n`,0
-err_a20_not_enabled db `failed to enable the A20 line\r\n`,0
+str_welcome db "hello from the blueberry bootloader!",0
+err_a20_not_enabled db "failed to enable the A20 line",0
+err_get_mmap_failed db "memory map could not be retrieved from BIOS",0

@@ -8,8 +8,12 @@ GLOBAL envdata_struct
 GLOBAL envdata_drive_number
 GLOBAL envdata_mmap_num_entries
 GLOBAL envdata_mmap_ptr
+GLOBAL envdata_gpt_header_ptr
+GLOBAL envdata_gpt_table_ptr
 
 envdata_struct:
-    envdata_drive_number db 0
+    envdata_drive_number     db 0
     envdata_mmap_num_entries dd 0
-    envdata_mmap_ptr dd 0
+    envdata_mmap_ptr         dd 0
+    envdata_gpt_header_ptr   dd 0
+    envdata_gpt_table_ptr    dd 0

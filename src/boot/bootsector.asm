@@ -13,7 +13,7 @@
 BITS 16
 ORG 0x7c00
 
-%include "addresses.asm"
+%include "mem_locations.asm"
 
 ; We know that the bootsector is located at 0x7c00 in physical memory, but there
 ; are several possibilities for the actual value of CS:IP. We can make sure that
@@ -60,10 +60,6 @@ fail:
     test al, al  ; check for null terminator
     jz hang
     int 0x10     ; print to screen
-
-    ; If there's no serial port, loop immediately
-    cmp BYTE [no_serial_port], 1
-    je .loop
 
 ; CPU is much faster than serial; spin until tx buffer is empty 
 .wait_serial_loop:
@@ -140,25 +136,6 @@ init_serial:
     mov al, 0xc7
     out dx, al
 
-    ; Set the port to loopback mode to test if it actually exists and works.
-    ; The only reason we do this is because we don't want to wait on a non-
-    ; existent serial port when logging a message.
-    mov dx, 0x3fc
-    mov al, 0x13
-    out dx, al
-
-    ; Write something to the port and read it back; if it doesn't match, assume
-    ; that we cannot use the port.
-    mov dx, 0x3f8
-    mov al, 0x55
-    out dx, al
-
-    in al, dx
-    cmp al, 0x55
-    je .done
-
-    ; Mark the port as unusable.
-    mov BYTE [no_serial_port], 1
     ret
 
 ; If the port is good, disable loopback
@@ -279,9 +256,6 @@ load_bootloader:
 ; Store the drive number in a known location that can be passed to the boot-
 ; loader later on
 drive_number db 0
-
-; Remember whether there's a working serial port
-no_serial_port db 0
 
 ; A couple of null-terminated error messages, for debugging's sake
 err_disk_read_fail db "disk I/O failure",0

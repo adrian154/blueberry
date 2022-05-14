@@ -8,6 +8,7 @@
 # Is this Makefile horrendously overcomplicated? Maybe. I think part of it is 
 # just because `make` syntax stinks.
 
+# TODO: fix whatever's going on here
 CC := /home/oreo/opt/cross/bin/i686-elf-gcc
 
 BUILDDIR := ./build
@@ -59,7 +60,7 @@ image: $(DISK_IMAGE) $(BOOTSECTOR) $(BOOTLOADER)
 # nized value for BIOS boot partitions.
 $(DISK_IMAGE): cleanup-disk
 	dd if=/dev/zero of=$(DISK_IMAGE) bs=1048576 count=16
-	parted $(DISK_IMAGE) --script mklabel gpt mkpart "boot" 34s 40s mkpart "Blueberry" 41s 100% set 1 bios_grub on
+	parted $(DISK_IMAGE) --script mklabel gpt mkpart "boot" 34s 50s mkpart "Blueberry" 51s 100% set 1 bios_grub on
 	losetup -P $(LOOPBACK) $(DISK_IMAGE)
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mkdir -p $(MOUNTDIR)
@@ -75,8 +76,7 @@ cleanup-disk:
 
 # Remove all build files; also creates directories if they don't exist yet
 clean: cleanup-disk
-	mkdir -p $(BUILDDIR)
-	rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR)
 
 # ==============================================================================
 # The Bootsector
@@ -95,12 +95,12 @@ $(BOOTSECTOR): src/boot/bootsector.asm | $(BUILDDIR)
 # so that our start symbol occurs at the very beginning of the binary. This
 # could be fixed through the linker script, but I don't think that's really
 # necessary.
-BOOTLOADER_OBJECTS := bootloader.o envdata.o a20.o
+BOOTLOADER_OBJECTS := bootloader.o envdata.o a20.o e820.o
 BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
 
 # Link the bootloader objects
 $(BOOTLOADER): $(BOOTLOADER_OBJ_FILES) | $(BUILDDIR)
-	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $^ 
+	$(CC) -T src/boot/linker.ld -o $(BOOTLOADER) -ffreestanding -nostdlib $^ -Xlinker -Map=$(BUILDDIR)/boot/loader.map
 
 $(BUILDDIR)/boot/%.o: src/boot/%.asm
 	nasm $< -f elf -o $@ -I ./src/boot/
