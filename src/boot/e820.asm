@@ -1,5 +1,5 @@
 ; ==============================================================================
-; bootloader.asm: retrieve a memory map through BIOS
+; e820.asm: retrieve a memory map through BIOS
 ; ==============================================================================
 ; The kernel needs information about how much memory is available and where it's
 ; located to function properly. This information is difficult to obtain in
@@ -21,7 +21,6 @@ MMAP_ENTRY_SIZE equ 24
 EXTERN envdata_mmap_ptr 
 EXTERN envdata_mmap_num_entries
 GLOBAL get_mmap_e820
-GLOBAL mmap_base
 
 ; Each call to INT 0x15 AX=0xe820 results in one memory map entry being written
 ; to a user-supplied buffer. EBX is also populated with a "continuation" value,

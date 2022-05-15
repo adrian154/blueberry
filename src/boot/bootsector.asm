@@ -209,7 +209,7 @@ load_bootloader:
     mov ebx, [edx + 0x20]
     sub eax, ebx
     mov WORD [.DAP_sectors], ax
-    mov WORD [.DAP_start_sector], bx
+    mov DWORD [.DAP_start_sector], ebx
     mov WORD [.DAP_addr], BOOTLOADER_LOAD_ADDR
     
     ; Set up for BIOS call to load bootloader into memory
