@@ -95,7 +95,7 @@ $(BOOTSECTOR): src/boot/bootsector.asm | $(BUILDDIR)
 # so that our start symbol occurs at the very beginning of the binary. This
 # could be fixed through the linker script, but I don't think that's really
 # necessary.
-BOOTLOADER_OBJECTS := bootloader.o envdata.o a20.o e820.o
+BOOTLOADER_OBJECTS := bootloader.o envdata.o a20.o e820.o exfat.o load-kernel.o
 BOOTLOADER_OBJ_FILES := $(patsubst %, $(BUILDDIR)/boot/%, $(BOOTLOADER_OBJECTS))
 
 # Link the bootloader objects

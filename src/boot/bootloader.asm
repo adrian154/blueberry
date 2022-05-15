@@ -23,11 +23,13 @@ SECTION .text
 %include "mem_locations.asm"
 
 GLOBAL start
+
 EXTERN envdata_drive_number
 EXTERN envdata_gpt_header_ptr
 EXTERN envdata_gpt_table_ptr
 EXTERN enable_a20
 EXTERN get_mmap_e820
+EXTERN load_kernel
 
 start:
 
@@ -54,6 +56,11 @@ start:
     test ax, ax
     jz .e820_fail
 
+    ; Load the kernel into memory
+    call load_kernel
+    test ax, ax 
+    jnz .load_kernel_fail
+
     jmp hang
 
 .a20_fail:
@@ -62,6 +69,10 @@ start:
     jmp hang
 .e820_fail:
     mov si, err_get_mmap_failed
+    call print 
+    jmp hang
+.load_kernel_fail:  
+    ; load_kernel sets an error message in SI
     call print 
 hang:
     cli

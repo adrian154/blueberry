@@ -26,7 +26,7 @@ GLOBAL DAP.start_sector
 GLOBAL os_part_length
 GLOBAL os_part_start_sector
 
-; This routine returns 1 in AX if successful, 0 if not. An error message is set
+; This routine returns 0 in AX if successful, 1 if not. An error message is set
 ; in SI.
 load_kernel:
 
@@ -42,7 +42,7 @@ load_kernel:
 
     ; Compare partition type GUID
     mov eax, 0
-.check_guid_loop
+.check_guid_loop:
     mov ebx, [edx + eax * 4]
     cmp [kernel_partition_type + eax * 4], ebx
     jne .next_partition
@@ -96,6 +96,7 @@ load_kernel:
 .unknown_fs:
     mov ax, 1
     mov si, err_unknown_fs
+    ret
 
 ; Trashes EAX, EDX, and SI
 ; Failure indicated by carry flag

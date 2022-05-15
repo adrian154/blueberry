@@ -14,8 +14,25 @@ EXTERN os_part_start_sector
 GLOBAL exfat_detect
 GLOBAL exfat_load
 
+; magic numbers identifying the fs
+;EXFAT_MAGIC_0 equ 0x41465845
+EXFAT_MAGIC_0 equ 0xDEADBEEF
+EXFAT_MAGIC_1 equ 0x20202054
+
 ; Inspect the sector in `sector_buf` and determine if it's the beginning of an
-; exFAT-formatted volume.
+; exFAT-formatted volume. If the partition is an exFAT volume, return 1 in CX;
+; otherwise, 0.
 exfat_detect:
+    cmp WORD [sector_buf + 3], EXFAT_MAGIC_0
+    jne .not_match
+    cmp WORD [sector_buf + 7], EXFAT_MAGIC_1
+    jne .not_match 
+    mov cx, 1
+    ret
+.not_match:
+    mov cx, 0
+    ret
 
 exfat_load:
+    xor ax, ax
+    ret 
