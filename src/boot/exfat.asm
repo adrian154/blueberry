@@ -2,6 +2,9 @@
 ; exfat.asm: find and load the kernel from an exFAT filesystem
 ; ==============================================================================
 
+BITS 16
+SECTION .text
+
 EXTERN read_sectors
 EXTERN sector_buf
 EXTERN DAP.sectors 
@@ -15,8 +18,7 @@ GLOBAL exfat_detect
 GLOBAL exfat_load
 
 ; magic numbers identifying the fs
-;EXFAT_MAGIC_0 equ 0x41465845
-EXFAT_MAGIC_0 equ 0xDEADBEEF
+EXFAT_MAGIC_0 equ 0x41465845
 EXFAT_MAGIC_1 equ 0x20202054
 
 ; Inspect the sector in `sector_buf` and determine if it's the beginning of an

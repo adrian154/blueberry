@@ -12,6 +12,9 @@
 
 %include "mem_locations.asm"
 
+BITS 16
+SECTION .text
+
 EXTERN envdata_drive_number
 EXTERN exfat_detect
 EXTERN exfat_load
@@ -36,7 +39,7 @@ load_kernel:
     ; first partition with a GUID matching what parted defaults to.
     
     ; Load the number of partition entries
-    mov ecx, DWORD [GPT_ENTRIES_LOAD_ADDR + 0x50]
+    mov ecx, DWORD [GPT_HEADER_LOAD_ADDR + 0x50]
     mov edx, GPT_ENTRIES_LOAD_ADDR
 .loop:
 
@@ -46,24 +49,21 @@ load_kernel:
     mov ebx, [edx + eax * 4]
     cmp [kernel_partition_type + eax * 4], ebx
     jne .next_partition
+    inc eax 
+    cmp eax, 4
+    jl .check_guid_loop
 
     ; The partition matches; now we need to load the first sector, detect the
     ; filesystem, and invoke FS-specific code to load the kernel.
-    mov eax, [edx + 0x28]
+    mov [os_part_ptr], edx
     mov ebx, [edx + 0x20]
-    sub eax, ebx 
-    
-    mov [os_part_length], eax 
-    mov [os_part_start_sector], ebx
-
-    mov WORD [DAP.sectors], ax 
     mov DWORD [DAP.start_sector], ebx
+    mov WORD [DAP.sectors], 1
     mov WORD [DAP.addr], sector_buf
     call read_sectors
     jc .read_fail
 
     ; Detect FS
-    ; For now, we only support exFAT
     call exfat_detect
     jcxz .nextfs_0
     call exfat_load
@@ -82,7 +82,7 @@ load_kernel:
 
     ; Read field in GPT header to determine size of each partition entry
     ; Increment and loop
-    add edx, [GPT_ENTRIES_LOAD_ADDR + 0x54]
+    add edx, [GPT_HEADER_LOAD_ADDR + 0x54]
     jmp .loop
 
 .no_partition_found:
@@ -122,9 +122,8 @@ DAP:
     dd 0
     dd 0 
 
-; Store the OS partition start and length
-os_part_start_sector dd 0
-os_part_length dd 0
+; Store a pointer to the OS partition entry
+os_part_ptr dw 0
 
 ; Reserve 512 bytes to read sectors into
 sector_buf times 512 db 0

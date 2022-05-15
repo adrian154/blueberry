@@ -185,7 +185,7 @@ load_bootloader:
     ; The number of partition entries is stored in a field in the GPT header
     ; Loop over entries in the partition table and try to identify the "boot
     ; partition"
-    mov ecx, DWORD [GPT_ENTRIES_LOAD_ADDR + 0x50]
+    mov ecx, DWORD [GPT_HEADER_LOAD_ADDR + 0x50]
     mov edx, GPT_ENTRIES_LOAD_ADDR
 .loop:
 
