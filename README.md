@@ -27,5 +27,3 @@ The system can be booted in QEMU with
 ```
 qemu-system-i386 -drive file=disk.img,format=raw
 ```
-
-I have not tested the OS on real hardware yet, since I don't really have anything that still supports legacy BIOS boot.

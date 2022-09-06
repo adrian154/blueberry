@@ -20,7 +20,7 @@
 BITS 16
 SECTION .text
 
-%include "mem_locations.asm"
+%include "mem-locations.asm"
 
 GLOBAL start
 

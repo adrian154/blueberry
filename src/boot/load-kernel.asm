@@ -10,7 +10,7 @@
 ; A lot of code in this file is reused from the bootsector; if you ever find
 ; that comments are sparse for something, go check bootsector.asm.
 
-%include "mem_locations.asm"
+%include "mem-locations.asm"
 
 BITS 16
 SECTION .text

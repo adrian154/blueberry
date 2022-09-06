@@ -13,7 +13,7 @@
 BITS 16
 ORG 0x7c00
 
-%include "mem_locations.asm"
+%include "mem-locations.asm"
 
 ; We know that the bootsector is located at 0x7c00 in physical memory, but there
 ; are several possibilities for the actual value of CS:IP. We can make sure that
@@ -22,10 +22,8 @@ jmp 0x0000:start
 start:
 
     ; Disable interrupts while we're setting up the stack and segment registers.
-    ; Otherwise, things could get hairy.
+    ; Otherwise, bad things will happen.
     cli
-
-    ; Set all segment registers to zero
     xor ax, ax
     mov ds, ax
     mov es, ax
@@ -83,7 +81,7 @@ hang:
 
 set_textmode:
     xor ah, ah   ; INT 0x10 AH=0x00: set video mode 
-    mov al, 0x03 ; AL = desired vieo mode
+    mov al, 0x03 ; AL = desired video mode (mode 3 is textmode)
     int 0x10
     ret
 
@@ -138,19 +136,12 @@ init_serial:
 
     ret
 
-; If the port is good, disable loopback
-.done:
-    mov dx, 0x3fc
-    mov al, 0x3
-    out dx, al
-    ret
-
 ; At this point, the most convenient way to load the kernel is to rely on BIOS
 ; interrupts. I'm using the LBA BIOS extensions for disk IO because I really
 ; don't want to work with CHS addressing.
 load_bootloader:
 
-    ; Set DL again.
+    ; Restore DL
     mov dl, [drive_number]
 
     ; Read the GPT into memory
@@ -230,6 +221,7 @@ load_bootloader:
     ; loop exit condition
     dec ecx
     test ecx, ecx
+    mov si, err_loader_part_not_found
     jz fail
   
     ; A field in the GPT header tells us the size of each partition entry.
@@ -260,6 +252,7 @@ drive_number db 0
 ; A couple of null-terminated error messages, for debugging's sake
 err_disk_read_fail db "disk I/O failure",0
 err_bad_gpt_header db "invalid GPT header",0
+err_loader_part_not_found db "could not find bootloader partition",0
 
 ; The BIOS boot partition type
 ; I'm serious. This is the actual value of the GUID.
