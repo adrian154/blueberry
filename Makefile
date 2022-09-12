@@ -65,6 +65,7 @@ $(DISK_IMAGE): cleanup-disk
 	mkfs.exfat -n "Blueberry" $(OS_PART_LOOPDEV)
 	mkdir -p $(MOUNTDIR)
 	mount $(OS_PART_LOOPDEV) $(MOUNTDIR)
+	echo "Hello World" > $(MOUNTDIR)/test.txt
 
 # Remove old disk images and loopback devices; tear down any mount points that
 # haven't been released yet.

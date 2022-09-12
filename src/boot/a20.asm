@@ -21,7 +21,7 @@
 ;
 ; It's worth noting that from what I can tell, on many Intel processors in the
 ; past 10 years the A20 line can no longer be masked off. The nightmare is
-; finally coming to an end...
+; finally coming to an end.
 
 BITS 16
 SECTION .text

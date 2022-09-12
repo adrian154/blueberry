@@ -11,8 +11,7 @@ EXTERN DAP.sectors
 EXTERN DAP.addr 
 EXTERN DAP.segment 
 EXTERN DAP.start_sector
-EXTERN os_part_length
-EXTERN os_part_start_sector
+EXTERN os_part.start_sector
 
 GLOBAL exfat_detect
 GLOBAL exfat_load
@@ -36,5 +35,20 @@ exfat_detect:
     ret
 
 exfat_load:
-    xor ax, ax
+
+    ; calculate offset of root directory relative to the start of the cluster heap 
+    mov eax, DWORD [sector_buf + 96]
+    sub eax, 2
+    mov cl, [sector_buf + 109]
+    shl eax, cl
+
+    ; add cluster heap offset and volume start offset
+    add eax, DWORD [sector_buf + 88]
+    mov ebx, [os_part.start_sector]
+    add eax, ebx
+
+    
+
+    cli
+    hlt
     ret 

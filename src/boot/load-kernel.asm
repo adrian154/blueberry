@@ -26,8 +26,7 @@ GLOBAL DAP.sectors
 GLOBAL DAP.addr 
 GLOBAL DAP.segment 
 GLOBAL DAP.start_sector
-GLOBAL os_part_length
-GLOBAL os_part_start_sector
+GLOBAL os_part.start_sector
 
 ; This routine returns 0 in AX if successful, 1 if not. An error message is set
 ; in SI.
@@ -55,9 +54,10 @@ load_kernel:
 
     ; The partition matches; now we need to load the first sector, detect the
     ; filesystem, and invoke FS-specific code to load the kernel.
-    mov [os_part_ptr], edx
+    mov [os_part.ptr], edx
     mov ebx, [edx + 0x20]
     mov DWORD [DAP.start_sector], ebx
+    mov DWORD [os_part.start_sector], ebx
     mov WORD [DAP.sectors], 1
     mov WORD [DAP.addr], sector_buf
     call read_sectors
@@ -122,8 +122,10 @@ DAP:
     dd 0
     dd 0 
 
-; Store a pointer to the OS partition entry
-os_part_ptr dw 0
+; Store a pointer to the OS partition 
+os_part:
+    .ptr: dd 0
+    .start_sector: dd 0
 
 ; Reserve 512 bytes to read sectors into
 sector_buf times 512 db 0
