@@ -27,6 +27,7 @@ GLOBAL DAP.addr
 GLOBAL DAP.segment 
 GLOBAL DAP.start_sector
 GLOBAL os_part.start_sector
+GLOBAL err_disk_read_fail
 
 ; This routine returns 0 in AX if successful, 1 if not. An error message is set
 ; in SI.
@@ -67,6 +68,7 @@ load_kernel:
     call exfat_detect
     jcxz .nextfs_0
     call exfat_load
+    jc .fs_fail
     ret
 
 .nextfs_0:
@@ -97,6 +99,10 @@ load_kernel:
     mov ax, 1
     mov si, err_unknown_fs
     ret
+.fs_fail:
+    mov ax, 1
+    ; SI has already been set
+    ret
 
 ; Trashes EAX, EDX, and SI
 ; Failure indicated by carry flag
@@ -119,9 +125,8 @@ DAP:
 .segment:
     dw 0
 .start_sector:
-    dd 0
-    dd 0 
-
+    dq 0
+    
 ; Store a pointer to the OS partition 
 os_part:
     .ptr: dd 0
