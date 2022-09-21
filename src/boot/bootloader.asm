@@ -16,6 +16,13 @@
 ; Because the bootloader has so much more functionality, each file is assembled
 ; independently and linked into a final binary according to the linker script.
 ; Therefore, we don't need ORG directives in the individual files.
+;
+; LIMITATIONS
+;     - LBA indexes are truncated to 32 bits, causing issues if the OS partition
+;       resides above 2 TiB.
+;     - Further limitations are documented in the filesystem driver(s)' im-
+;       plementations. 
+;
 
 BITS 16
 SECTION .text

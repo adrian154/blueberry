@@ -28,6 +28,7 @@ GLOBAL DAP.segment
 GLOBAL DAP.start_sector
 GLOBAL os_part.start_sector
 GLOBAL err_disk_read_fail
+GLOBAL err_kernel_not_found
 
 ; This routine returns 0 in AX if successful, 1 if not. An error message is set
 ; in SI.
@@ -139,6 +140,7 @@ sector_buf times 512 db 0
 err_part_not_found db `no OS partition was found\r\n`,0
 err_disk_read_fail db `disk I/O failure\r\n`,0
 err_unknown_fs db `unknown filesystem\r\n`,0
+err_kernel_not_found db `kernel file not found\r\n`,0
 
 ; The generic Linux partition GUID, 0FC63DAF-8483-4772-8E79-3D69D8477DE4
 kernel_partition_type dd 0x0fc63daf, 0x47728483, 0x693d798e, 0xe47d47d8
